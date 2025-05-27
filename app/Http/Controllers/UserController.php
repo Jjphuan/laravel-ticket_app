@@ -7,59 +7,46 @@ use Illuminate\Validation\ValidationException;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request) 
-    {
-    
-       
-        return;
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function register(Request $request)
     {
         $locale = $request->header('Accept-Language','en');
         App::setLocale($locale);
 
-        $result = $request->validate([
-            'name' => 'required|min:6',
-            'phone_num' => 'required|numeric',
-            'email' => 'required|numeric',
-            'password' => 'required|numeric',
-        ],[
-            'name.required' => __('You have to enter your name'),
-            'name.min' => __('validation.required')
+        $request->validate([
+            'name' => ['required','string','min:6'],
+            'phone_num' => ['required',Rule::unique('ticket_users','phone_number')],
+            'email' => ['required','email',Rule::unique('ticket_users','email')],
+            'password' => ['required','string','min:8'],
         ]);
 
+        $user = User::create([
+            'username' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'phone_number' => $request->phone_num
+        ]);
+        $token = $user->createToken('api-token')->plainTextToken;
 
-
-        // $user = User::create([
-        //     'name' => $request->name,
-        //     'email' => $request->email,
-        //     'password' => bcrypt($request->password)
-        // ]);
+        if($user['id'] != null){
+            $result['success'] = true;
+            $result['result'] = $user;
+            $result['token'] = $token;
+        }
 
         return response()->json($result);
-        // return response()->json(['message' => 'User registered successfully']);
     }
 
     public function login(Request $request)
     {
+
+        $locale = $request->header('Accept-Language','en');
+        App::setLocale($locale);
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required'
@@ -67,21 +54,36 @@ class UserController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.']
+                'email' => __("email_or_password_err")
             ]);
         }
+        // $user->tokens()->delete();
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-        return response()->json(['token' => $token, 'user' => $user]);
+        if($user && $token){
+            $result['success'] = true;
+            $result['data'] = $user;
+            $result['token'] = $token;
+        }
+
+        return response()->json($result);
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken();
-        return response()->json(['message' => 'Logged out successfully']);
+        $logout = $request->user()->tokens()->delete();
+
+        if($logout){
+            $result['success'] = true;
+            $result['message'] = __('logout_success');
+        }else{
+            $result['success'] = false;
+            $result['message'] = "something went wrong";
+        }
+        return response()->json($result);
     }
 
     public function user(Request $request)
@@ -89,35 +91,4 @@ class UserController extends Controller
         return response()->json($request->user());
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show()
-    {
-        return response()->json('',200,[],JSON_UNESCAPED_UNICODE);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit()
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy()
-    {
-        //
-    }
 }

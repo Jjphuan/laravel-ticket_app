@@ -1,3 +1,5 @@
 {
-    "hello": "Hello"
+    "register_success": "Register Success",
+    "email_or_password_err": "Email or Password Incorrect",
+    "logout_success": "Logged out successfully"
 }

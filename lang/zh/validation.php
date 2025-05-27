@@ -105,6 +105,7 @@ return [
     'not_regex' => ':attribute 格式无效。',
     'numeric' => ':attribute 必须是数字。',
     'password' => [
+        'min' => '密码长度至少为 :min 个字符。',
         'letters' => ':attribute 必须包含至少一个字母。',
         'mixed' => ':attribute 必须包含大小写字母各一个。',
         'numbers' => ':attribute 必须包含至少一个数字。',
@@ -154,7 +155,10 @@ return [
     ],
 
     'attributes' => [
-        'name'=>'namo'
+        'name'=> '名字',
+        'email'=> '邮箱',
+        'password'=> '密码',
+        'phone_num' => '手机号码'
     ],
 
 ];
