@@ -31,7 +31,7 @@ class QuestionController extends Controller
                     'title'=> $questionResult->title,
                     'answers'=> $questionResult->answers,
                     'created_at' => $question[$i]->created_at->format('Y-m-d'),
-                    'updated_at' => $question[$i]->created_at->format('Y-m-d'),
+                    'updated_at' => $question[$i]->updated_at->format('Y-m-d'),
                     'show'=> ($questionResult->is_show == 0) ? true : false ,
                 ];
             }
@@ -43,7 +43,7 @@ class QuestionController extends Controller
             $result['message'] = $data;
         }
 
-        return $data;
+        return $result;
     }
 
     public function addQuestion(Request $request){
